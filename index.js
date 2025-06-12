@@ -1,39 +1,55 @@
-const { makeWASocket, useSingleFileAuthState } = require("@whiskeysockets/baileys");
-const fs = require("fs");
-const path = require("path");
+const { default: makeWASocket, useSingleFileAuthState, DisconnectReason } = require('@adiwajshing/baileys');
+const fs = require('fs');
+const qrcode = require('qrcode-terminal');
 
-// Auth state (saved in "auth_info.json")
-const { state, saveState } = useSingleFileAuthState("./auth_info.json");
+const { state, saveState } = useSingleFileAuthState('./auth_info.json');
 
-// Initialize WhatsApp bot
-async function startBot() {
+async function start() {
   const sock = makeWASocket({
-    printQRInTerminal: true, // Show QR in terminal
     auth: state,
+    printQRInTerminal: false, // We'll handle QR code manually
   });
 
-  // Save session on connection update
-  sock.ev.on("connection.update", (update) => {
-    const { connection, qr } = update;
-    if (connection === "close") saveState();
-    if (qr) console.log("Scan QR Code to log in!");
+  sock.ev.on('creds.update', saveState);
+
+  sock.ev.on('connection.update', async (update) => {
+    const { connection, lastDisconnect, qr } = update;
+
+    if (qr) {
+      console.log('Scan the QR code:');
+      qrcode.generate(qr, { small: true });
+    }
+
+    if (connection === 'close') {
+      const shouldReconnect =
+        lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut;
+      if (shouldReconnect) {
+        console.log('Reconnecting...');
+        start();
+      } else {
+        console.log('Disconnected. Please restart the bot.');
+      }
+    } else if (connection === 'open') {
+      console.log('Connected!');
+    }
   });
 
-  // Listen for incoming messages
-  sock.ev.on("messages.upsert", async ({ messages }) => {
-    const message = messages[0];
-    if (!message.message) return;
+  sock.ev.on('messages.upsert', async (messageUpdate) => {
+    if (messageUpdate.type !== 'notify') return;
+    const msg = messageUpdate.messages[0];
 
-    const sender = message.key.remoteJid; // User's WhatsApp ID
-    const text = message.message.conversation || "";
+    if (!msg.message || msg.key.fromMe) return;
 
-    console.log(`Message from ${sender}: ${text}`);
+    const from = msg.key.remoteJid;
+    const messageType = Object.keys(msg.message)[0];
 
-    // Reply to "hi"
-    if (text.toLowerCase() === "hi") {
-      await sock.sendMessage(sender, { text: "Hello! 👋" });
+    if (messageType === 'conversation') {
+      const text = msg.message.conversation;
+      console.log(`Received message: ${text}`);
+
+      await sock.sendMessage(from, { text: `You said: ${text}` });
     }
   });
 }
 
-startBot().catch((err) => console.error("Bot error:", err));
+start();
