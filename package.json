@@ -8,7 +8,6 @@
   "dependencies": {
     "qrcode-terminal": "^0.12.0",
     "path" : "^0.12.7" ,
-    "@joanimi/baileys" : "^3.0.10",
     "@neoxr/wb" : "^5.9.3"
  
   },
