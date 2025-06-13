@@ -1,57 +1,47 @@
-const { default: makeWASocket, useMultiFileAuthState , DisconnectReason } = require('@adiwajshing/baileys');
-const fs = require('fs');
-const qrcode = require('qrcode-terminal');
+const { default: makeWASocket, useMultiFileAuthState } = require('@joanimi/baileys')
+const fs = require('fs')
 
+// Path to store auth credentials
+const authFile = './auth_info.json'
+const { state, saveState } = useMultiFileAuthState(authFile)
 
-async function start() {
-  const { state, saveState } = await useMultiFileAuthState('./auth_info.json');
+async function startBot() {
+    const sock = makeWASocket({ 
+        auth: state
+    })
 
-  const sock = makeWASocket({
-    auth: state,
-    printQRInTerminal: false, // We'll handle QR code manually
-  });
+    // Save credentials on update
+    sock.ev.on('creds.update', saveState)
 
-sock.ev.on('creds.update', () => {
-  saveState();
-});
-  sock.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    // Log connection status
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update
+        if (connection === 'close') {
+            // Reconnect if disconnected
+            startBot()
+        } else if (connection === 'open') {
+            console.log('Connected to WhatsApp')
+        }
+    })
 
-    if (qr) {
-      console.log('Scan the QR code:');
-      qrcode.generate(qr, { small: true });
-    }
+    // Listen for incoming messages
+    sock.ev.on('messages.upsert', async (m) => {
+        const msg = m.messages[0]
+        if (!msg.message || msg.key.fromMe) return // Ignore if from self or no message
 
-    if (connection === 'close') {
-      const shouldReconnect =
-        lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut;
-      if (shouldReconnect) {
-        console.log('Reconnecting...');
-        start();
-      } else {
-        console.log('Disconnected. Please restart the bot.');
-      }
-    } else if (connection === 'open') {
-      console.log('Connected!');
-    }
-  });
+        const senderId = msg.key.remoteJid
+        const messageText = msg.message.conversation || msg.message.extendedTextMessage?.text
 
-  sock.ev.on('messages.upsert', async (messageUpdate) => {
-    if (messageUpdate.type !== 'notify') return;
-    const msg = messageUpdate.messages[0];
+        // Log received message
+        console.log(`Message from ${senderId}: ${messageText}`)
 
-    if (!msg.message || msg.key.fromMe) return;
-
-    const from = msg.key.remoteJid;
-    const messageType = Object.keys(msg.message)[0];
-
-    if (messageType === 'conversation') {
-      const text = msg.message.conversation;
-      console.log(`Received message: ${text}`);
-
-      await sock.sendMessage(from, { text: `You said: ${text}` });
-    }
-  });
+        // Simple reply logic
+        if (messageText && messageText.toLowerCase() === 'hello') {
+            await sock.sendMessage(senderId, { text: 'Hi there! How can I help you?' })
+        } else if (messageText && messageText.toLowerCase() === 'bye') {
+            await sock.sendMessage(senderId, { text: 'Goodbye! Have a great day!' })
+        }
+    })
 }
 
-start();
+startBot()
