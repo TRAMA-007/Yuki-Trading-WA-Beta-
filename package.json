@@ -8,7 +8,8 @@
   "dependencies": {
     "qrcode-terminal": "^0.12.0",
     "path" : "^0.12.7" ,
-    "@neoxr/wb" : "^5.9.3"
+    "@neoxr/wb" : "^5.9.3",
+    "@whatsapp-web.js" : "^1.30.0" 
  
   },
   "engines": {
