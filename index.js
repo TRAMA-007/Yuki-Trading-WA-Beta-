@@ -1,4 +1,4 @@
-const { Client, LocalAuth } = require('@nexor/wb');
+const { Client, LocalAuth } = require('@neoxr/wb');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
