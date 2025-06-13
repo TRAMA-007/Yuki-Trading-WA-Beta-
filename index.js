@@ -11,8 +11,9 @@ async function start() {
     printQRInTerminal: false, // We'll handle QR code manually
   });
 
-  sock.ev.on('creds.update', saveState);
-
+sock.ev.on('creds.update', () => {
+  saveState();
+});
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
 
