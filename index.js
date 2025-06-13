@@ -2,7 +2,7 @@ const { default: makeWASocket, useMultiFileAuthState , DisconnectReason } = requ
 const fs = require('fs');
 const qrcode = require('qrcode-terminal');
 
-const { state, saveState } = useMultiFileAuthState('./auth_info.json');
+const { state, saveState } = await useMultiFileAuthState('./auth_info.json');
 
 async function start() {
   const sock = makeWASocket({
