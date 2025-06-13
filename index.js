@@ -1,47 +1,40 @@
-const { default: makeWASocket, useMultiFileAuthState } = require('@joanimi/baileys')
-const fs = require('fs')
+const { Client, LocalAuth } = require('@nexor/wb');
 
-// Path to store auth credentials
-const authFile = './auth_info.json'
-const { state, saveState } = useMultiFileAuthState(authFile)
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: { 
+        headless: false // Set to true for production
+    }
+});
 
-async function startBot() {
-    const sock = makeWASocket({ 
-        auth: state
-    })
+client.on('qr', (qr) => {
+    console.log('Scan the QR code below to log in:');
+    console.log(qr);
+});
 
-    // Save credentials on update
-    sock.ev.on('creds.update', saveState)
+client.on('ready', () => {
+    console.log('Client is ready!');
+});
 
-    // Log connection status
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update
-        if (connection === 'close') {
-            // Reconnect if disconnected
-            startBot()
-        } else if (connection === 'open') {
-            console.log('Connected to WhatsApp')
-        }
-    })
+client.on('message', async (msg) => {
+    console.log('Message received:', msg.body);
 
-    // Listen for incoming messages
-    sock.ev.on('messages.upsert', async (m) => {
-        const msg = m.messages[0]
-        if (!msg.message || msg.key.fromMe) return // Ignore if from self or no message
+    // Simple echo bot
+    if (msg.body.toLowerCase() === 'ping') {
+        await msg.reply('pong');
+    }
+    
+    // Greeting response
+    else if (msg.body.toLowerCase().includes('hello')) {
+        await msg.reply('Hello there! How can I help you?');
+    }
+    
+    // Default response
+    else if (msg.body) {
+        await msg.reply('Thanks for your message! I\'m a simple bot.');
+    }
+});
 
-        const senderId = msg.key.remoteJid
-        const messageText = msg.message.conversation || msg.message.extendedTextMessage?.text
-
-        // Log received message
-        console.log(`Message from ${senderId}: ${messageText}`)
-
-        // Simple reply logic
-        if (messageText && messageText.toLowerCase() === 'hello') {
-            await sock.sendMessage(senderId, { text: 'Hi there! How can I help you?' })
-        } else if (messageText && messageText.toLowerCase() === 'bye') {
-            await sock.sendMessage(senderId, { text: 'Goodbye! Have a great day!' })
-        }
-    })
-}
-
-startBot()
+client.initialize().catch(err => {
+    console.error('Initialization error:', err);
+});
