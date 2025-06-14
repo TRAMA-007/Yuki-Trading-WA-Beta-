@@ -1,4 +1,4 @@
-const { color } = require(".color");
+const { color } = require("./color");
 
 async function startA17() {
   console.log(
