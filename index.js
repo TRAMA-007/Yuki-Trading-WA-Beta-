@@ -1,23 +1,12 @@
-const { color } = require("./color");
 
 async function startA17() {
   console.log(
-    color(
-      figlet.textSync("Yuki Bot", {
-        font: "Standard",
-        horizontalLayout: "default",
-        vertivalLayout: "default",
-        //width: 80,
-        // whitespaceBreak: true,
-        whitespaceBreak: false,
-      }),
-      "green"
-    )
+ "TEXTTTTTTT"
   );
-  console.log(color('\nLESGOOOOOO RED', 'red'))
-  console.log(color('\nNAAAAH M GOOOD', 'red'))
+  console.log('\nLESGOOOOOO RED')
+  console.log('\nNAAAAH M GOOOD')
 
-  const { state, saveCreds } = await useMultiFileAuthState("./A17-SESSION");
+  const { state, saveCreds } = await useMultiFileAuthState("./ses.json");
   const A17 = A17Connect({
     logger: pino({ level: "silent" }),
     printQRInTerminal: true,
