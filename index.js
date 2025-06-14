@@ -1,3 +1,19 @@
+const {
+  default: A17Connect,
+  useMultiFileAuthState,
+  DisconnectReason,
+  fetchLatestBaileysVersion,
+  generateForwardMessageContent,
+  prepareWAMessageMedia,
+  generateWAMessageFromContent,
+  generateMessageID,
+  downloadContentFromMessage,
+  makeInMemoryStore,
+  jidDecode,
+  groupFetchAllParticipating,
+  proto,
+} = require("@whiskeysockets/baileys");
+
 
 async function startA17() {
   console.log(
