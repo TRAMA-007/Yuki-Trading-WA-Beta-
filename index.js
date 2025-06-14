@@ -13,6 +13,25 @@ const {
   groupFetchAllParticipating,
   proto,
 } = require("@whiskeysockets/baileys");
+const pino = require("pino");
+const fs = require("fs");
+ const chalk = require("chalk");
+const FileType = require("file-type");
+const axios = require("axios")
+const CFonts = require("cfonts");
+const { exec, spawn, execSync } = require("child_process");
+const moment = require("moment-timezone");
+const PhoneNumber = require("awesome-phonenumber");
+const { promisify } = require("util");
+const writeFileAsync = promisify(fs.writeFile);
+const path = require("path");
+
+
+
+const figlet = require("figlet");
+const store = makeInMemoryStore({
+  logger: pino().child({ level: "silent", stream: "store" }),
+});
 
 
 async function startA17() {
