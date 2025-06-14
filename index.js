@@ -22,7 +22,7 @@ async function startA17() {
   console.log('\nLESGOOOOOO RED')
   console.log('\nNAAAAH M GOOOD')
 
-  const { state, saveCreds } = await useMultiFileAuthState("auth-info.json");
+  const { state, saveCreds } = await useMultiFileAuthState("./auth");
   const A17 = A17Connect({
     logger: pino({ level: "silent" }),
     printQRInTerminal: true,
